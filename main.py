@@ -4,79 +4,67 @@ from memory_profiler import profile,memory_usage
 from os import path
 
 
-cache = {}
-if path.exists("info.bin"):
-    with open("info.bin","rb") as f:
-        cache = load(f)
-
-
 def age_water_chart(gender,age):
-    
-    target_ml = None
     if gender=="male" or gender=="other":
         if age>=1 and age<=3:
-            target_ml = 1000
+            return 1000
         elif age>=4 and age<=8:
-            target_ml = 1200
+            return 1200
         elif age>=9 and age<=13:
-            target_ml = 1600
+            return 1600
         elif age>=14 and age<=18:
-            target_ml = 1900
+            return 1900
         elif age>=19:
-            target_ml = 2600
+            return 2600
     
     elif gender=="female":
         if age>=1 and age<=3:
-            target_ml = 1000
+            return 1000
         elif age>=4 and age<=8:
-            target_ml = 1200
+            return 1200
         elif age>=9 and age<=13:
-            target_ml = 1400
+            return 1400
         elif age>=14 and age<=18:
-            target_ml = 1600
+            return 1600
         elif age>=19:
-            target_ml = 2100
+            return 2100
     
-    return target_ml
+    return None
 
 
-def track_water_intake():
-        '''Incomplete '''
-        global cache
-        drank = drank_ml.get()
-        drank = int(drank.split()[0])
-        print(drank)
-        
-        temp_drank_ml = cache["track"]
-        temp_drank_ml += drank
-        cache["track"] = temp_drank_ml
-        del temp_drank_ml
-            
-        dranked_ml = cache["track"]
-        total_target_ml = cache["target"]
-        cache['percentage'] = int((dranked_ml/total_target_ml)*100)
-            
-        print(f"{cache['percentage']} %") 
-        show_percentage.config(text=f"Percentage dranked: {cache['percentage']}%")
-            
-        temp = cache['glass_fill_cor']
-        temp[3] = int((205)-((205)*(cache['percentage']/100)))
-            
-        cache['glass_fill_cor'] = temp
-            
-        drawing.create_rectangle(0,0,100,205,fill = "#005493")
-        drawing.create_rectangle(*temp,fill = "#FFFAFA")
-        
-        with open("info.bin","wb") as f:
-            dump(cache,f)
-            
-            # time.sleep(1)
-            # root.destroy()
+def track_water_intake(cache_mem,drawing,show_percentage,drank_ml):
+    '''Incomplete '''
+    drank = drank_ml.get()
+    drank = int(drank.split()[0])
+    
+    temp_drank_ml = cache_mem["track"]
+    temp_drank_ml += drank
+    cache_mem["track"] = temp_drank_ml
+    del temp_drank_ml
+    
+    dranked_ml = cache_mem["track"]
+    total_target_ml = cache_mem["target"]
+    cache_mem['percentage'] = int((dranked_ml/total_target_ml)*100)
+    
+    del dranked_ml,total_target_ml
+    
+    show_percentage.config(text=f"Percentage dranked: {cache_mem['percentage']}%")
+    
+    temp = cache_mem['glass_fill_cor']
+    temp[3] = int((205)-((205)*(cache_mem['percentage']/100)))
+    
+    cache_mem['glass_fill_cor'] = temp
+    
+    drawing.create_rectangle(0,0,100,205,fill = "#005493")
+    drawing.create_rectangle(*temp,fill = "#FFFAFA")
+    
+    del temp
+    with open("info.bin","wb") as f:
+        dump(cache_mem,f)
 
 
-def gui():
-    global drawing,drank_ml,root,show_percentage,cache
-    print(cache)
+def gui(cache_mem):
+    
     water_ml = ["100 ml","250 ml","500 ml","750 ml","1000 ml","1500 ml"]
     
     root = Tk()
@@ -93,18 +81,18 @@ def gui():
     drawing.place(x=100,y=50)
 
 
-    rect_cor = cache["glass_fill_cor"]
+    rect_cor = cache_mem["glass_fill_cor"]
     drawing.create_rectangle(*rect_cor,fill="#FFFAFA")
     
-    show_percentage = Label(root,text=f"Percentage dranked: {cache['percentage']}%",font="Roboto 12 bold",bg="#282C35",fg="#f5f5f5")
+    show_percentage = Label(root,text=f"Percentage dranked: {cache_mem['percentage']}%",font="Roboto 12 bold",bg="#282C35",fg="#f5f5f5")
     show_percentage.place(x=160,y=1)
     
-    Button(root,text="DRANKED!!",font="Roboto 14 bold",bg="#4CAF50",fg="#F1F1F1",command=track_water_intake).place(x=5,y=305)
+    Button(root,text="DRANKED!!",font="Roboto 14 bold",bg="#4CAF50",fg="#F1F1F1",command=lambda :track_water_intake(cache_mem,drawing,show_percentage,drank_ml)).place(x=5,y=305)
     root.mainloop()
 
 
 def first_inte():
-    global age,gender,cache
+    global age,gender
     gender_list = {"male","female","other"}
     
     def info_entry():
@@ -123,6 +111,7 @@ def first_inte():
                     
                     with open("info.bin","wb") as f:
                         dump(cache,f)
+                        del cache
                         root.destroy()
                 else:
                     msgb.showerror(title="Enter Gender",message="Please Enter Your Gender!")
@@ -162,18 +151,24 @@ def first_inte():
     root.mainloop()
 
 
-@profile
+@profile(stream=open("memory.log","a"))
 def main_exe():
-    global cache
+    
+    cache_mem = {}
+    if path.exists("info.bin"):
+        with open("info.bin","rb") as f:
+            cache_mem = load(f)
+    
     while True:
-        if cache:
-            gui()
+        if cache_mem:
+            gui(cache_mem)
         else:
             first_inte()
             with open("info.bin","rb") as f:
-                cache = load(f)
-            gui()
+                cache_mem = load(f)
+            gui(cache_mem)
         break
+
 
 if __name__=="__main__":
     main_exe()
