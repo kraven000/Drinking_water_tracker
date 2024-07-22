@@ -1,5 +1,13 @@
-from tkinter import *
+from tkinter import Button,Canvas,Entry,IntVar,Label,OptionMenu,StringVar,Tk
 from pickle import dump,load
+from memory_profiler import profile,memory_usage
+from os import path
+
+
+cache = {}
+if path.exists("info.bin"):
+    with open("info.bin","rb") as f:
+        cache = load(f)
 
 
 def age_water_chart(gender,age):
@@ -34,40 +42,43 @@ def age_water_chart(gender,age):
 
 def track_water_intake():
         '''Incomplete '''
+        global cache
         drank = drank_ml.get()
         drank = int(drank.split()[0])
         print(drank)
         
-        with open("info.bin","rb+") as f:
-            content = load(f)
-            temp_drank_ml = content["track"]
-            temp_drank_ml += drank
-            content["track"] = temp_drank_ml
-            del temp_drank_ml
+        temp_drank_ml = cache["track"]
+        temp_drank_ml += drank
+        cache["track"] = temp_drank_ml
+        del temp_drank_ml
             
-            dranked_ml = content["track"]
-            total_target_ml = content["target"]
-            content['percentage'] = round((dranked_ml/total_target_ml)*100)
+        dranked_ml = cache["track"]
+        total_target_ml = cache["target"]
+        cache['percentage'] = int((dranked_ml/total_target_ml)*100)
             
-            print(f"{content['percentage']} %") 
-            temp = content['glass_fill_cor']
-            temp[3] = temp[3]-((temp[3])*(content['percentage']/100))
+        print(f"{cache['percentage']} %") 
+        show_percentage.config(text=f"Percentage dranked: {cache['percentage']}%")
             
-            content['glass_fill_cor'] = temp
+        temp = cache['glass_fill_cor']
+        temp[3] = int((205)-((205)*(cache['percentage']/100)))
             
-            drawing.create_rectangle(0,0,100,205,fill = "#005493")
-            drawing.create_rectangle(*temp,fill = "#FFFAFA")
-            f.seek(0)
-            dump(content,f)
-            root.destroy()
+        cache['glass_fill_cor'] = temp
+            
+        drawing.create_rectangle(0,0,100,205,fill = "#005493")
+        drawing.create_rectangle(*temp,fill = "#FFFAFA")
+        
+        with open("info.bin","wb") as f:
+            dump(cache,f)
+            
+            # time.sleep(1)
+            # root.destroy()
 
 
 def gui():
-    global drawing,drank_ml,root
-    water_ml = ["100 ml","250 ml","500 ml","750 ml","100 ml","1500 ml"]
+    global drawing,drank_ml,root,show_percentage,cache
+    print(cache)
+    water_ml = ["100 ml","250 ml","500 ml","750 ml","1000 ml","1500 ml"]
     
-    with open("info.bin","rb") as f:
-        content = load(f)
     root = Tk()
 
     root.configure(bg="#151515")
@@ -82,18 +93,18 @@ def gui():
     drawing.place(x=100,y=50)
 
 
-    rect_cor = content["glass_fill_cor"]
-    # rect_cor = [0,0,100,150]
-    #variable with percentage of water drank specifically: rect_cor[3] index is variable
-
+    rect_cor = cache["glass_fill_cor"]
     drawing.create_rectangle(*rect_cor,fill="#FFFAFA")
+    
+    show_percentage = Label(root,text=f"Percentage dranked: {cache['percentage']}%",font="Roboto 12 bold",bg="#282C35",fg="#f5f5f5")
+    show_percentage.place(x=160,y=1)
     
     Button(root,text="DRANKED!!",font="Roboto 14 bold",bg="#4CAF50",fg="#F1F1F1",command=track_water_intake).place(x=5,y=305)
     root.mainloop()
 
 
 def first_inte():
-    global age,gender
+    global age,gender,cache
     gender_list = {"male","female","other"}
     
     def info_entry():
@@ -105,10 +116,13 @@ def first_inte():
                     target = target_ml.get() if target_ml.get()>0 else age_water_chart(gender=gender.get()
                                                                                        ,age=age.get())
                     time = time_interval.get() if time_interval.get()>0 else 1
+                    
+                    cache = {"age":age.get(),"gender":gender.get(),"target":target,
+                             "time interval":time,"track":0,"glass_fill_cor":[0,0,100,205],
+                             "percentage":0}
+                    
                     with open("info.bin","wb") as f:
-                        dump({"age":age.get(),"gender":gender.get(),
-                                     "target":target,"time interval":time,"track":0,
-                                     "glass_fill_cor":[0,0,100,205],"percentage":0},f)
+                        dump(cache,f)
                         root.destroy()
                 else:
                     msgb.showerror(title="Enter Gender",message="Please Enter Your Gender!")
@@ -148,14 +162,18 @@ def first_inte():
     root.mainloop()
 
 
+@profile
 def main_exe():
-    from os import listdir
-    
+    global cache
     while True:
-        if "info.bin" in listdir():
+        if cache:
             gui()
         else:
             first_inte()
+            with open("info.bin","rb") as f:
+                cache = load(f)
             gui()
+        break
 
-main_exe()
+if __name__=="__main__":
+    main_exe()
