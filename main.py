@@ -1,7 +1,11 @@
 from tkinter import Button,Canvas,Entry,IntVar,Label,OptionMenu,StringVar,Tk
 from pickle import dump,load
-from memory_profiler import profile,memory_usage
+from memory_profiler import profile
 from os import path
+from time import sleep
+from plyer import notification
+from random import shuffle,choice
+from playsound import playsound
 
 
 def age_water_chart(gender,age):
@@ -32,8 +36,7 @@ def age_water_chart(gender,age):
     return None
 
 
-def track_water_intake(cache_mem,drawing,show_percentage,drank_ml):
-    '''Incomplete '''
+def track_water_intake(cache_mem,drawing,show_percentage,target_achieve_now,drank_ml):
     drank = drank_ml.get()
     drank = int(drank.split()[0])
     
@@ -49,6 +52,7 @@ def track_water_intake(cache_mem,drawing,show_percentage,drank_ml):
     del dranked_ml,total_target_ml
     
     show_percentage.config(text=f"Percentage dranked: {cache_mem['percentage']}%")
+    target_achieve_now.config(text=f"Water Dranked: {cache_mem['track']} ml")
     
     temp = cache_mem['glass_fill_cor']
     temp[3] = int((205)-((205)*(cache_mem['percentage']/100)))
@@ -59,7 +63,7 @@ def track_water_intake(cache_mem,drawing,show_percentage,drank_ml):
     drawing.create_rectangle(*temp,fill = "#FFFAFA")
     
     del temp
-    with open("info.bin","wb") as f:
+    with open("info.dat","wb") as f:
         dump(cache_mem,f)
 
 
@@ -68,32 +72,37 @@ def gui(cache_mem):
     water_ml = ["100 ml","250 ml","500 ml","750 ml","1000 ml","1500 ml"]
     
     root = Tk()
-
-    root.configure(bg="#151515")
+    
+    root.configure(bg="#282C35")
     root.geometry("500x500")
-
+    
+    Label(root,text=f"Target to drink water in a day: {cache_mem['target']} ml",font="Roboto 12 bold",bg="#282C35",fg="#F5F5F5").place(x=0,y=1.5)
+    
+    target_achieve_now = Label(root,text=f"Water Dranked: {cache_mem['track']} ml",font="Roboto 12 bold",bg="#282C35",fg="#F5F5F5")
+    target_achieve_now.place(x=0,y=32) 
+    
+    show_percentage = Label(root,text=f"Percentage dranked: {cache_mem['percentage']}%",font="Roboto 12 bold",bg="#282C35",fg="#F5F5F5")
+    show_percentage.place(x=0,y=62)
+    
+    
     drank_ml = StringVar()
     drank_ml.set(water_ml[0])
     
-    OptionMenu(root,drank_ml,*water_ml).place(x=10,y=1)
-
+    OptionMenu(root,drank_ml,*water_ml).place(x=10,y=92)
+    
     drawing = Canvas(root,width=97,height=200,bg="#005493")
-    drawing.place(x=100,y=50)
-
-
+    drawing.place(x=100,y=132)
+    
     rect_cor = cache_mem["glass_fill_cor"]
     drawing.create_rectangle(*rect_cor,fill="#FFFAFA")
     
-    show_percentage = Label(root,text=f"Percentage dranked: {cache_mem['percentage']}%",font="Roboto 12 bold",bg="#282C35",fg="#f5f5f5")
-    show_percentage.place(x=160,y=1)
-    
-    Button(root,text="DRANKED!!",font="Roboto 14 bold",bg="#4CAF50",fg="#F1F1F1",command=lambda :track_water_intake(cache_mem,drawing,show_percentage,drank_ml)).place(x=5,y=305)
+    Button(root,text="DRANKED!!",font="Roboto 14 bold",bg="#4CAF50",fg="#F1F1F1",command=lambda :track_water_intake(cache_mem,drawing,show_percentage,target_achieve_now,drank_ml)).place(x=5,y=365)
     root.mainloop()
 
 
 def first_inte():
     global age,gender
-    gender_list = {"male","female","other"}
+    gender_list = ["male","female","other"]
     
     def info_entry():
         import tkinter.messagebox as msgb
@@ -109,7 +118,7 @@ def first_inte():
                              "time interval":time,"track":0,"glass_fill_cor":[0,0,100,205],
                              "percentage":0}
                     
-                    with open("info.bin","wb") as f:
+                    with open("info.dat","wb") as f:
                         dump(cache,f)
                         del cache
                         root.destroy()
@@ -126,6 +135,7 @@ def first_inte():
     root = Tk()
     root.geometry("500x500")
     root.configure(bg="#282C35")
+    root.protocol("WM_DELETE_WINDOW",exit)
     
     target_ml = IntVar()
     time_interval = IntVar()
@@ -153,21 +163,54 @@ def first_inte():
 
 @profile(stream=open("memory.log","a"))
 def main_exe():
+    condition = True
     
+    # to get facts for notification
+    with open("facts.dat","rb") as f:
+        data = load(f)
+        title_list = list(data)
+        
+    # making cache
     cache_mem = {}
-    if path.exists("info.bin"):
-        with open("info.bin","rb") as f:
+    if path.exists("info.dat"):
+        with open("info.dat","rb") as f:
             cache_mem = load(f)
+            if cache_mem['target']<=cache_mem['track']:  
+                condition = False
     
-    while True:
+    while condition:
+        shuffle(title_list)
+        title = choice(title_list)
+        
         if cache_mem:
-            gui(cache_mem)
+            # if cache_mem['target']<=cache_mem['track']: 
+            #     condition = False
+            #     break
+            # else:
+            notification.notify(title=title,
+                            message=data[title],
+                            app_name='water drink',
+                            app_icon='water_icon.ico',
+                            timeout=5)
+            try:
+                playsound("saahil.mp3")
+                sleep(1)
+            except:
+                gui(cache_mem)
+            else:
+                gui(cache_mem)
         else:
             first_inte()
-            with open("info.bin","rb") as f:
+            with open("info.dat","rb") as f:
                 cache_mem = load(f)
             gui(cache_mem)
-        break
+        
+        if cache_mem['target']<=cache_mem['track']: 
+            condition = False
+            break
+        sleep(30)
+    else:
+        gui(cache_mem)
 
 
 if __name__=="__main__":
