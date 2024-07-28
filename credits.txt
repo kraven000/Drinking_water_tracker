@@ -1,0 +1,4 @@
+water_icon.ico:
+    Desinger:  Elegantthemes
+    License: https://www.gnu.org/licenses/gpl-3.0.html
+    platform: https://www.iconarchive.com/show/beautiful-flat-icons-by-elegantthemes/Water-icon.html
