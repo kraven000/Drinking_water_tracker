@@ -8,8 +8,10 @@ from random import shuffle,choice
 from playsound import playsound
 
 
-def age_water_chart(gender,age):
-    if gender=="male" or gender=="other":
+def age_water_chart(gender:str,age:int) -> int:
+    '''It' a function which takes gender and age as argument and give you the target to drink water in ml if target is
+    not specified'''
+    if gender in ["male","other"]:
         if age>=1 and age<=3:
             return 1000
         elif age>=4 and age<=8:
@@ -32,11 +34,10 @@ def age_water_chart(gender,age):
             return 1600
         elif age>=19:
             return 2100
-    
-    return None
 
 
-def track_water_intake(cache_mem,drawing,show_percentage,target_achieve_now,drank_ml):
+def track_water_intake(cache_mem:dict,drawing:Canvas,show_percentage:int,target_achieve_now:int,drank_ml:int) -> None:
+    '''It's the function which tracks the how much water you have dranked'''
     drank = drank_ml.get()
     drank = int(drank.split()[0])
     
@@ -67,8 +68,8 @@ def track_water_intake(cache_mem,drawing,show_percentage,target_achieve_now,dran
         dump(cache_mem,f)
 
 
-def gui(cache_mem):
-    
+def gui(cache_mem:dict) -> None:
+    '''Gui where you user will interact and tell how much water he had dranked.'''
     water_ml = ["100 ml","250 ml","500 ml","750 ml","1000 ml","1500 ml"]
     
     root = Tk()
@@ -76,12 +77,15 @@ def gui(cache_mem):
     root.configure(bg="#282C35")
     root.geometry("500x500")
     
-    Label(root,text=f"Target to drink water in a day: {cache_mem['target']} ml",font="Roboto 12 bold",bg="#282C35",fg="#F5F5F5").place(x=0,y=1.5)
+    Label(root,text=f"Target to drink water in a day: {cache_mem['target']} ml",font="Roboto 12 bold",
+          bg="#282C35",fg="#F5F5F5").place(x=0,y=1.5)
     
-    target_achieve_now = Label(root,text=f"Water Dranked: {cache_mem['track']} ml",font="Roboto 12 bold",bg="#282C35",fg="#F5F5F5")
+    target_achieve_now = Label(root,text=f"Water Dranked: {cache_mem['track']} ml",font="Roboto 12 bold",
+                               bg="#282C35",fg="#F5F5F5")
     target_achieve_now.place(x=0,y=32) 
     
-    show_percentage = Label(root,text=f"Percentage dranked: {cache_mem['percentage']}%",font="Roboto 12 bold",bg="#282C35",fg="#F5F5F5")
+    show_percentage = Label(root,text=f"Percentage dranked: {cache_mem['percentage']}%",
+                            font="Roboto 12 bold",bg="#282C35",fg="#F5F5F5")
     show_percentage.place(x=0,y=62)
     
     
@@ -96,12 +100,12 @@ def gui(cache_mem):
     rect_cor = cache_mem["glass_fill_cor"]
     drawing.create_rectangle(*rect_cor,fill="#FFFAFA")
     
-    Button(root,text="DRANKED!!",font="Roboto 14 bold",bg="#4CAF50",fg="#F1F1F1",command=lambda :track_water_intake(cache_mem,drawing,show_percentage,target_achieve_now,drank_ml)).place(x=5,y=365)
+    Button(root,text="DRANKED!!",font="Roboto 14 bold",bg="#4CAF50",fg="#F1F1F1",
+           command=lambda :track_water_intake(cache_mem,drawing,show_percentage,target_achieve_now,drank_ml)).place(x=5,y=365)
     root.mainloop()
 
 
 def first_inte():
-    global age,gender
     gender_list = ["male","female","other"]
     
     def info_entry():
@@ -149,20 +153,23 @@ def first_inte():
     Label(root,text="Your Gender *: ",font="Helvetica 14 bold",bg="#282C35",fg="#F1F1F1").place(x=1,y=30)
     OptionMenu(root,gender,*gender_list).place(x=180,y=32)
     
-    Label(root,text="Enter The time interval for notificaton(in Hrs): ",font="Helvetica 14 bold",bg="#282C35",fg="#F1F1F1").place(x=1,y=60)
+    Label(root,text="Enter The time interval for notificaton(in Hrs): ",font="Helvetica 14 bold",
+          bg="#282C35",fg="#F1F1F1").place(x=1,y=60)
     Entry(root,textvariable=time_interval,width=10).place(x=430,y=63)
     
     Label(root,text="Enter Your Target in ml: ",font="Helvetica 14 bold",bg="#282C35",fg="#F1F1F1").place(x=1,y=90)
     Entry(root,textvariable=target_ml,width=10).place(x=230,y=93)
     
-    Label(root,text="'*': It means it is compulsory to give information!!",font="Roboto 16 bold",fg="#FD0709",bg="#282C35").place(x=1,y=123)
+    Label(root,text="'*': It means it is compulsory to give information!!",font="Roboto 16 bold",
+          fg="#FD0709",bg="#282C35").place(x=1,y=123)
     
     Button(root,text="submit",font="Aerial 13 bold",bg="#4CAF50", fg="#FFFFFF",command=info_entry).place(x=1,y=163)
     root.mainloop()
 
 
 @profile(stream=open("memory.log","a"))
-def main_exe():
+def main_exe() -> None:
+    '''It is the fuction where main execution starts'''
     condition = True
     
     # to get facts for notification
@@ -183,15 +190,7 @@ def main_exe():
         title = choice(title_list)
         
         if cache_mem:
-            # if cache_mem['target']<=cache_mem['track']: 
-            #     condition = False
-            #     break
-            # else:
-            notification.notify(title=title,
-                            message=data[title],
-                            app_name='water drink',
-                            app_icon='water_icon.ico',
-                            timeout=5)
+            notification.notify(title=title,message=data[title],app_name='water drink',app_icon='water_icon.ico',timeout=5)
             try:
                 playsound("saahil.mp3")
                 sleep(1)
