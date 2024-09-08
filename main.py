@@ -94,6 +94,7 @@ def track_water_intake(cache_mem:dict,drawing:Canvas,show_percentage:int,target_
         with open("info.dat","wb") as f:
             dump(cache_mem,f)
     
+    
     # This block of code is part of the `main_exe` function and is executed when the current date does
     # not match the date stored in the cache memory. Here's what each line is doing:
     else:
@@ -164,6 +165,7 @@ def first_inte():
         import tkinter.messagebox as msgb
         
         try:
+            
             # The below Python code snippet is performing the following actions:
             if age.get()>0:
                 if gender.get() in gender_list:
@@ -256,6 +258,7 @@ def main_exe() -> None:
     # is met. Within the loop, it checks if the "date" in the cache memory is equal to the current
     # date. If they match, it shuffles a list of titles and selects one randomly.
     while condition:
+        
         # This Python code snippet is performing the following actions:
         if cache_mem["date"] == current_date:
             shuffle(title_list)
@@ -284,7 +287,6 @@ def main_exe() -> None:
                 gui(cache_mem)
             
             
-            
             # The code snippet provided is written in Python and it seems to be part of a conditional
             # statement.
             if cache_mem['target']<=cache_mem['track']: 
@@ -292,6 +294,7 @@ def main_exe() -> None:
                 break
             sleep(cache_mem["time_interval"]*60*60)
         else:
+            
             # The above Python code snippet is updating a dictionary `cache_mem` with key-value pairs.
             # It sets the key "date" to the value `current_date`, the key "glass_fill_cor" to the list
             # `[0, 0, 100, 205]`, and the key "track" to the integer 0.
