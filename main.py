@@ -234,26 +234,34 @@ def first_inte():
 
 def main_exe() -> None:
     '''It is the fuction where main execution starts'''
+    current_date = str(datetime.now().date()).split("-")
+    current_date = {"day":int(current_date[-1]),"month":int(current_date[-2]),
+                    "year":int(current_date[-3])}
+    
     condition = True
     
     # to get facts for notification
     with open("facts.dat","rb") as f:
         data = load(f)
         title_list = list(data)
-        
+    
+    
     # making cache
     cache_mem = {}
     if path.exists("info.dat"):
-        with open("info.dat","rb") as f:
+        with open("info.dat","rb+") as f:
             cache_mem = load(f)
-            if cache_mem['target']<=cache_mem['track']:  
+            if cache_mem!=current_date:
+                cache_mem["date"] = current_date
+                cache_mem["glass_fill_cor"] = [0,0,100,205]
+                cache_mem['track'] = 0
+            
+            elif cache_mem['target']<=cache_mem['track']:  
                 condition = False
+            
+            f.seek(0)
+            dump(cache_mem,f)
     
-    current_date = str(datetime.now().date()).split("-")
-    current_date = {"day":int(current_date[-1]),"month":int(current_date[-2]),
-                    "year":int(current_date[-3])}
-    
-        
     # This Python code snippet is implementing a while loop that runs as long as a certain condition
     # is met. Within the loop, it checks if the "date" in the cache memory is equal to the current
     # date. If they match, it shuffles a list of titles and selects one randomly.
@@ -293,18 +301,22 @@ def main_exe() -> None:
                 condition = False
                 break
             sleep(cache_mem["time_interval"]*60*60)
-        else:
+        # else:
             
-            # The above Python code snippet is updating a dictionary `cache_mem` with key-value pairs.
-            # It sets the key "date" to the value `current_date`, the key "glass_fill_cor" to the list
-            # `[0, 0, 100, 205]`, and the key "track" to the integer 0.
-            cache_mem["date"] = current_date
-            cache_mem["glass_fill_cor"] = [0,0,100,205]
-            cache_mem['track'] = 0
-        
-            with open("info.dat","wb") as file:
-                dump(cache_mem,file)
-            gui(cache_mem=cache_mem)
+        #     # The above Python code snippet is updating a dictionary `cache_mem` with key-value pairs.
+        #     # It sets the key "date" to the value `current_date`, the key "glass_fill_cor" to the list
+        #     # `[0, 0, 100, 205]`, and the key "track" to the integer 0.
+        #     print("I am In else block")
+        #     cache_mem["date"] = current_date
+        #     cache_mem["glass_fill_cor"] = [0,0,100,205]
+        #     cache_mem['track'] = 0
+            
+        #     with open("info.dat","wb+") as file:
+        #         dump(cache_mem,file)
+        #         cache_mem = load(cache_mem)
+            
+        #     print(cache_mem)
+        #     gui(cache_mem=cache_mem)
     
     else:
         gui(cache_mem)
