@@ -12,7 +12,7 @@ CANVAS_WIDTH, CANVAS_HEIGHT = 97, 200
 WATER_INTAKE_FACTS_FILE = "facts.dat"
 USER_DATA_FILE = "info.dat"
 NOTIFICATION_ICON = 'water_icon.ico'
-SOUND_FILE = 'saahil.mp3'
+SOUND_FILE = 'notification_sound.mp3'
 
 class WaterTracker:
     def __init__(self):
